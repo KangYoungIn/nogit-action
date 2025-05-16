@@ -87,7 +87,7 @@ jobs:
           repo-url: https://github.com/KangYoungIn/nogit-action-private-test.git
           directory: ./private-repo
           username: oauth2
-          token: ${{ secrets.GIT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create file in private repo
         run: echo "private test" >> ./private-repo/secret.txt
@@ -115,6 +115,6 @@ jobs:
           action: push
           directory: ./private-repo
           username: oauth2
-          token: ${{ secrets.GIT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           remote: origin
           ref: main
