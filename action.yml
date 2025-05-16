@@ -28,7 +28,7 @@ inputs:
 
   token:
     description: >
-      Git token or GitHub token for HTTPS authentication (e.g. ${{ secrets.GITHUB_TOKEN }}).
+      Git token or GitHub token for HTTPS authentication (e.g. ${{ secrets.GIT_TOKEN }}).
     required: false
 
   email:
