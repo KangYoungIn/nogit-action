@@ -44,6 +44,12 @@ jobs:
         run: |
           echo "test file" >> ./test-repo/test.txt
 
+      - name: Status
+        uses: ./
+        with:
+          action: status
+          directory: ./test-repo
+
       - name: Add file
         uses: ./
         with:
@@ -65,12 +71,6 @@ jobs:
         uses: ./
         with:
           action: log
-          directory: ./test-repo
-
-      - name: Status
-        uses: ./
-        with:
-          action: status
           directory: ./test-repo
 
       - name: Fetch remote (public)
@@ -99,6 +99,12 @@ jobs:
           directory: ./private-repo
           files: |
             secret.txt
+
+      - name: Status
+        uses: ./
+        with:
+          action: status
+          directory: ./private-repo
 
       - name: Commit private file
         uses: ./
