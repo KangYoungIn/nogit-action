@@ -1,0 +1,65 @@
+name: nogit-action
+description: >
+  GitHub Action for basic Git operations without requiring the git CLI.
+  Supports clone, add, commit, push, status, checkout, log, and fetch via isomorphic-git.
+
+author: "KangYoungIn"
+
+inputs:
+  action:
+    description: >
+      The Git operation to perform. Supported actions: clone, add, commit, push, status, checkout, log, fetch.
+    required: true
+
+  repo-url:
+    description: >
+      Remote Git repository URL. Required for actions like clone and push.
+    required: false
+
+  directory:
+    description: >
+      Path to the working directory where Git operations will be performed.
+    required: true
+
+  username:
+    description: >
+      Git username for authentication. Usually 'oauth2' when using token-based auth.
+    required: false
+
+  token:
+    description: >
+      Git token or GitHub token for HTTPS authentication (e.g. ${{ secrets.GITHUB_TOKEN }}).
+    required: false
+
+  email:
+    description: >
+      Email used for Git commit. Optional — defaults to nogit@example.com.
+    required: false
+
+  files:
+    description: >
+      Newline-separated list of files to add for commit (only used in 'add' or 'commit' actions).
+    required: false
+
+  message:
+    description: >
+      Commit message for the 'commit' action.
+    required: false
+
+  ref:
+    description: >
+      Branch or tag name for checkout, push, etc.
+    required: false
+
+  remote:
+    description: >
+      Remote name to push to (default: origin).
+    required: false
+
+runs:
+  using: node20
+  main: dist/index.js
+
+branding:
+  icon: git-branch
+  color: blue

@@ -1,0 +1,120 @@
+name: CI Full Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  full-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      # ───────────── Public Repo ─────────────
+      - name: Clone (public repo)
+        uses: ./
+        with:
+          action: clone
+          repo-url: https://github.com/KangYoungIn/nogit-action.git
+          directory: ./test-repo
+
+      - name: Checkout branch (public)
+        uses: ./
+        with:
+          action: checkout
+          directory: ./test-repo
+          ref: main
+
+      - name: Create dummy file
+        run: |
+          echo "test file" >> ./test-repo/test.txt
+
+      - name: Add file
+        uses: ./
+        with:
+          action: add
+          directory: ./test-repo
+          files: |
+            test.txt
+
+      - name: Commit file
+        uses: ./
+        with:
+          action: commit
+          directory: ./test-repo
+          message: "Test commit from nogit-action"
+          username: nogit-bot
+          email: nogit@localhost
+
+      - name: Log history
+        uses: ./
+        with:
+          action: log
+          directory: ./test-repo
+
+      - name: Status
+        uses: ./
+        with:
+          action: status
+          directory: ./test-repo
+
+      - name: Fetch remote (public)
+        uses: ./
+        with:
+          action: fetch
+          directory: ./test-repo
+
+      # ───────────── Private Repo ─────────────
+      - name: Clone (private repo)
+        uses: ./
+        with:
+          action: clone
+          repo-url: https://github.com/KangYoungIn/nogit-action-private-test.git
+          directory: ./private-repo
+          username: oauth2
+          token: ${{ secrets.GIT_TOKEN }}
+
+      - name: Create file in private repo
+        run: echo "private test" >> ./private-repo/secret.txt
+
+      - name: Add private file
+        uses: ./ 
+        with:
+          action: add
+          directory: ./private-repo
+          files: |
+            secret.txt
+
+      - name: Commit private file
+        uses: ./
+        with:
+          action: commit
+          directory: ./private-repo
+          message: "test private commit"
+          username: nogit-bot
+          email: nogit@localhost
+
+      - name: Push private change
+        uses: ./
+        with:
+          action: push
+          directory: ./private-repo
+          username: oauth2
+          token: ${{ secrets.GIT_TOKEN }}
+          remote: origin
+          ref: main
