@@ -28,7 +28,8 @@ inputs:
 
   token:
     description: >
-      Git token or GitHub token for HTTPS authentication (e.g. ${{ secrets.GIT_TOKEN }}).
+      Git token or personal access token used for authentication with private repositories.
+      Example: Use a GitHub secret named GIT_TOKEN, and pass it as 'token: ${{ secrets.GIT_TOKEN }}'.
     required: false
 
   email:
