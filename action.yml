@@ -1,8 +1,6 @@
 name: nogit-action
 description: >
-  GitHub Action for basic Git operations without requiring the git CLI.
-  Supports clone, add, commit, push, status, checkout, log, and fetch via isomorphic-git.
-
+  nogit-action is a GitHub Action that allows you to perform Git operations without requiring the git CLI.
 author: "KangYoungIn"
 
 inputs:
