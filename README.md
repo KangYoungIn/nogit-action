@@ -25,126 +25,192 @@ Node.js 기반의 `isomorphic-git` 라이브러리를 사용하여 clone, commit
 
 ---
 
-## 사용 예시
+
+## 전체 워크플로우 예시
 
 ```yaml
-jobs:
-  example:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+name: CI Full Test
 
-      - name: nogit-action으로 저장소 클론
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  full-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 현재 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: TypeScript 빌드
+        run: npm run build
+
+      # ───── 공개 저장소 ─────
+      - name: 공개 저장소 클론
         uses: KangYoungIn/nogit-action@v1
         with:
           action: clone
-          repo-url: <https://github.com/your-org/private-repo.git>
-          directory: ./repo
-          username: oauth2
-          token: ${{ secrets.GIT_TOKEN }}
+          repo-url: https://github.com/KangYoungIn/nogit-action.git
+          directory: ./test-repo
 
-```
-
----
-
-## 지원 액션 목록
-
-| 액션 이름 | 설명 |
-| --- | --- |
-| `clone` | Git 저장소를 clone |
-| `checkout` | 브랜치 이동 또는 생성 |
-| `add` | 파일을 스테이징 |
-| `commit` | 커밋 생성 |
-| `push` | 원격 저장소에 푸시 |
-| `log` | 커밋 로그 출력 |
-| `status` | 변경된 파일 상태 확인 |
-| `fetch` | 원격 저장소 정보 가져오기 |
-
----
-
-## 입력값 설명
-
-| 입력 이름 | 필수 여부 | 설명 |
-| --- | --- | --- |
-| `action` | 예 | 실행할 Git 작업 (`clone`, `commit`, `push` 등) |
-| `repo-url` | 아니오 | clone 시 사용할 저장소 URL |
-| `directory` | 예 | Git 작업을 수행할 로컬 디렉터리 |
-| `username` | 아니오 | 인증용 사용자 이름 (기본값: `oauth2`) |
-| `token` | 아니오 | GitHub Token 또는 Personal Access Token |
-| `email` | 아니오 | 커밋 작성자 이메일 주소 |
-| `files` | 아니오 | add/commit 대상 파일 목록 (줄바꿈으로 구분) |
-| `message` | 아니오 | 커밋 메시지 |
-| `ref` | 아니오 | 브랜치 또는 태그 이름 |
-| `remote` | 아니오 | 원격 저장소 이름 (기본값: `origin`) |
-
----
-
-## 인증 정보
-
-- 퍼블릭 저장소는 인증 없이 clone 가능
-- 프라이빗 저장소 clone 또는 push 시에는 인증 필요
-
-```yaml
-with:
-  username: oauth2
-  token: ${{ secrets.GIT_TOKEN }}
-
-```
-
-> username에는 oauth2 또는 x-access-token 같은 값 사용 가능
-> 
-> 
-> Classic PAT: `repo` 권한 필요
-> Fine-grained PAT: 저장소 접근 + `contents: write` 권한 필요
-> 
-
----
-
-## 프라이빗 저장소 워크플로우 예시
-
-```yaml
-jobs:
-  example:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 프라이빗 저장소 클론
+      - name: 브랜치 체크아웃
         uses: KangYoungIn/nogit-action@v1
         with:
-          action: clone
-          repo-url: <https://github.com/your-org/private.git>
-          directory: ./my-repo
-          username: oauth2
-          token: ${{ secrets.GIT_TOKEN }}
+          action: checkout
+          directory: ./test-repo
+          ref: main
 
-      - name: 파일 생성
-        run: echo "Hello" > ./my-repo/hello.txt
+      - name: 테스트 파일 생성
+        run: echo "test file" >> ./test-repo/test.txt
+
+      - name: 상태 확인
+        uses: KangYoungIn/nogit-action@v1
+        with:
+          action: status
+          directory: ./test-repo
 
       - name: 파일 스테이징
         uses: KangYoungIn/nogit-action@v1
         with:
           action: add
-          directory: ./my-repo
+          directory: ./test-repo
           files: |
-            hello.txt
+            test.txt
 
-      - name: 커밋
+      - name: 파일 커밋
         uses: KangYoungIn/nogit-action@v1
         with:
           action: commit
-          directory: ./my-repo
-          message: "Add hello.txt"
+          directory: ./test-repo
+          message: "Test commit from nogit-action"
           username: nogit-bot
           email: nogit@localhost
 
-      - name: 푸시
+      - name: 커밋 로그 확인
         uses: KangYoungIn/nogit-action@v1
         with:
-          action: push
-          directory: ./my-repo
+          action: log
+          directory: ./test-repo
+
+      - name: 원격 저장소 fetch
+        uses: KangYoungIn/nogit-action@v1
+        with:
+          action: fetch
+          directory: ./test-repo
+
+      # ───── 비공개 저장소 ─────
+      - name: 비공개 저장소 클론
+        uses: KangYoungIn/nogit-action@v1
+        with:
+          action: clone
+          repo-url: https://github.com/KangYoungIn/nogit-action-private-test.git
+          directory: ./private-repo
           username: oauth2
           token: ${{ secrets.GIT_TOKEN }}
 
+      - name: 비공개 파일 생성
+        run: echo "private test" >> ./private-repo/secret.txt
+
+      - name: 비공개 파일 스테이징
+        uses: KangYoungIn/nogit-action@v1
+        with:
+          action: add
+          directory: ./private-repo
+          files: |
+            secret.txt
+
+      - name: 비공개 저장소 상태 확인
+        uses: KangYoungIn/nogit-action@v1
+        with:
+          action: status
+          directory: ./private-repo
+
+      - name: 비공개 파일 커밋
+        uses: KangYoungIn/nogit-action@v1
+        with:
+          action: commit
+          directory: ./private-repo
+          message: "Test private commit"
+          username: nogit-bot
+          email: nogit@localhost
+
+      - name: 비공개 저장소 푸시
+        uses: KangYoungIn/nogit-action@v1
+        with:
+          action: push
+          directory: ./private-repo
+          username: oauth2
+          token: ${{ secrets.GIT_TOKEN }}
+          remote: origin
+          ref: main
 ```
+
+---
+
+## 공개 저장소 단계별 입력값
+
+| 단계        | 액션         | 필수 입력값      | 설명                          |
+| --------- | ---------- | ----------- | --------------------------- |
+| 공개 저장소 클론 | `clone`    | `action`    | `clone`으로 설정하여 클론 동작을 지정    |
+|           |            | `repo-url`  | 클론할 공개 저장소의 URL             |
+|           |            | `directory` | 저장소를 클론할 로컬 디렉토리 경로         |
+| 브랜치 체크아웃  | `checkout` | `action`    | `checkout`으로 설정하여 브랜치 변경 지정 |
+|           |            | `directory` | 작업 디렉토리 (클론된 저장소 경로)        |
+|           |            | `ref`       | 체크아웃할 브랜치 이름 (`main` 등)     |
+| 상태 확인     | `status`   | `action`    | `status`로 설정하여 상태 출력 명령 실행  |
+|           |            | `directory` | 상태를 확인할 디렉토리 경로             |
+| 파일 스테이징   | `add`      | `action`    | `add`로 설정하여 파일 스테이징 지정      |
+|           |            | `directory` | Git 작업 디렉토리 경로              |
+|           |            | `files`     | 스테이징할 파일 목록 (줄바꿈 구분)        |
+| 커밋        | `commit`   | `action`    | `commit`으로 설정하여 커밋 실행       |
+|           |            | `directory` | Git 작업 디렉토리 경로              |
+|           |            | `message`   | 커밋 메시지                      |
+|           |            | `username`  | 커밋 작성자 이름                   |
+|           |            | `email`     | 커밋 작성자 이메일                  |
+| 로그 확인     | `log`      | `action`    | `log`로 설정하여 커밋 로그 출력        |
+|           |            | `directory` | 로그를 출력할 디렉토리                |
+| 원격 fetch  | `fetch`    | `action`    | `fetch`로 설정하여 원격 정보 동기화     |
+|           |            | `directory` | 작업 디렉토리 경로                  |
+
+---
+
+## 비공개 저장소 단계별 입력값
+
+| 단계          | 액션       | 필수 입력값      | 설명                           |
+| ----------- | -------- | ----------- | ---------------------------- |
+| 비공개 저장소 클론  | `clone`  | `action`    | `clone`으로 설정하여 클론 수행         |
+|             |          | `repo-url`  | 비공개 저장소의 URL                 |
+|             |          | `directory` | 저장소를 클론할 로컬 디렉토리             |
+|             |          | `username`  | 인증용 사용자 이름 (`oauth2` 권장)     |
+|             |          | `token`     | GitHub Personal Access Token |
+| 비공개 파일 스테이징 | `add`    | `action`    | `add`로 설정하여 파일 스테이징          |
+|             |          | `directory` | 작업 디렉토리                      |
+|             |          | `files`     | 스테이징할 파일 목록                  |
+| 상태 확인       | `status` | `action`    | `status`로 설정하여 변경 상태 확인      |
+|             |          | `directory` | 작업 디렉토리                      |
+| 커밋          | `commit` | `action`    | `commit`으로 설정하여 커밋 실행        |
+|             |          | `directory` | 작업 디렉토리                      |
+|             |          | `message`   | 커밋 메시지                       |
+|             |          | `username`  | 커밋 작성자 이름                    |
+|             |          | `email`     | 커밋 작성자 이메일                   |
+| 푸시          | `push`   | `action`    | `push`로 설정하여 원격 저장소에 푸시      |
+|             |          | `directory` | Git 저장소 경로                   |
+|             |          | `username`  | 인증용 사용자 이름                   |
+|             |          | `token`     | GitHub Token 또는 PAT          |
+|             |          | `remote`    | 원격 저장소 이름 (`origin` 권장)      |
+|             |          | `ref`       | 푸시할 브랜치 이름 (`main` 등)        |
+
 
 ---
 
@@ -166,7 +232,7 @@ MIT
 
 ---
 
-# nogit-action (English)
+# nogit-action
 
 `nogit-action` is a GitHub Action that allows you to perform Git operations without requiring the `git` CLI.
 It uses the Node.js-based `isomorphic-git` library to execute commands like clone, commit, and push.
@@ -205,7 +271,7 @@ jobs:
         uses: KangYoungIn/nogit-action@v1
         with:
           action: clone
-          repo-url: <https://github.com/your-org/private-repo.git>
+          repo-url: <https://github.com/KangYoungIn/private-repo.git>
           directory: ./repo
           username: oauth2
           token: ${{ secrets.GIT_TOKEN }}
@@ -278,7 +344,7 @@ jobs:
         uses: KangYoungIn/nogit-action@v1
         with:
           action: clone
-          repo-url: <https://github.com/your-org/private.git>
+          repo-url: <https://github.com/KangYoungIn/private.git>
           directory: ./my-repo
           username: oauth2
           token: ${{ secrets.GIT_TOKEN }}

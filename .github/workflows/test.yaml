@@ -27,14 +27,14 @@ jobs:
 
       # ───────────── Public Repo ─────────────
       - name: Clone (public repo)
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: clone
           repo-url: https://github.com/KangYoungIn/nogit-action.git
           directory: ./test-repo
 
       - name: Checkout branch (public)
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: checkout
           directory: ./test-repo
@@ -45,13 +45,13 @@ jobs:
           echo "test file" >> ./test-repo/test.txt
 
       - name: Status
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: status
           directory: ./test-repo
 
       - name: Add file
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: add
           directory: ./test-repo
@@ -59,7 +59,7 @@ jobs:
             test.txt
 
       - name: Commit file
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: commit
           directory: ./test-repo
@@ -68,20 +68,20 @@ jobs:
           email: nogit@localhost
 
       - name: Log history
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: log
           directory: ./test-repo
 
       - name: Fetch remote (public)
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: fetch
           directory: ./test-repo
 
       # ───────────── Private Repo ─────────────
       - name: Clone (private repo)
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: clone
           repo-url: https://github.com/KangYoungIn/nogit-action-private-test.git
@@ -93,7 +93,7 @@ jobs:
         run: echo "private test" >> ./private-repo/secret.txt
 
       - name: Add private file
-        uses: ./ 
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: add
           directory: ./private-repo
@@ -101,13 +101,13 @@ jobs:
             secret.txt
 
       - name: Status
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: status
           directory: ./private-repo
 
       - name: Commit private file
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: commit
           directory: ./private-repo
@@ -116,7 +116,7 @@ jobs:
           email: nogit@localhost
 
       - name: Push private change
-        uses: ./
+        uses: KangYoungIn/nogit-action@v1
         with:
           action: push
           directory: ./private-repo
