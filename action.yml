@@ -60,5 +60,5 @@ runs:
   main: dist/index.js
 
 branding:
-  icon: git-branch
-  color: blue
+  icon: command
+  color: gray-dark
